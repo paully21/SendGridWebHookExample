@@ -1,0 +1,73 @@
+﻿@model List<SendGridWebHookLibrary.Models.SendGridEvent>
+
+<h2>SendGrid Webhook Event Listing</h2>
+
+<p>This page uses SignalR to display any Webhook events posted from SendGrid to /api/SendGridEvents. As the events are posted, a grid will populate below with the results.</p>
+
+<p>To see a detailed description of the api for accepting Webhook events, go to the <a href="/Help">WebAPI help page</a>.</p>
+
+<p>To post your own test events using <a href="http://fiddler2.com/">fiddler</a>, use this <a href="FiddlerTestRequest.txt">fiddler script</a>.</p>
+
+
+<div id="grid"></div>
+<br style="clear: both;" />
+
+@section scripts
+{
+
+    <script type="text/javascript">
+        var intialModel = @Html.Raw(Json.Encode(Model));
+
+        $(document).ready(function() {
+            bindGrid(intialModel)
+            var proxy = $.connection.sendGridEventHub;
+            proxy.client.receiveUpdatedEventList = function (list) {
+                bindGrid(list);
+            };
+            $.connection.hub.start();
+        });
+
+
+        function bindGrid(model)
+        {
+            if(model == null)
+            {
+                $("#grid").visible = false;
+                return;
+            }
+            $("#grid").kendoGrid({
+                dataSource: {
+                    data: model,
+                    pageSize: 10
+                },
+                groupable: false,
+                sortable: true,
+                scrollable: false,
+                pageable: {
+                    refresh: true,
+                    pageSizes: true
+                },
+                columns: [{
+                    field: "SendGridEventID",
+                    title: "ID"
+                }, {
+                    field: "EventDate",
+                    title: "Date",
+                    template: '#= kendo.toString(new Date(parseInt(EventDate.replace(/[A-Za-z$--/]/g, ""))),"MMMM dd yyyy") #'
+                }, {
+                    field: "EmailAddress"
+                }, {
+                    field: "Event"
+                }, {
+                    field: "Response"
+                }, {
+                    field: "Status"
+                }, {
+                    field: "Reason"
+                }, {
+                    field: "Type"
+                }]
+            });
+        }
+    </script>
+}
